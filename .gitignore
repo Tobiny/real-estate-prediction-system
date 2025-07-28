@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Logs
+logs/
+*.log
+
+# Data files (too large for git)
+data/raw/
+data/processed/
+*.csv
+*.parquet
+*.xlsx
+
+# Model files (too large for git)
+models/*.pkl
+models/*.h5
+models/*.joblib
+
+# MLflow
+mlruns/
+mlruns.db
+*.db
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Build directories
+build/
+dist/
+*.egg-info/
+
+# Keep important config files
+!config/
+!requirements*.txt
+!render.yaml
+!scripts/production_api_render.py

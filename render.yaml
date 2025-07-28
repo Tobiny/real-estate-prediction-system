@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: real-estate-prediction-api
+    env: python
+    repo: https://github.com/TU_USUARIO/real-estate-prediction-system
+    buildCommand: pip install -r requirements-render.txt
+    startCommand: uvicorn scripts.production_api:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: "2"
+      - key: ENVIRONMENT
+        value: "production"
+    healthCheckPath: /health

@@ -1,0 +1,59 @@
+# Core Data Science
+pandas
+numpy
+polars
+pyarrow
+
+# Machine Learning
+scikit-learn
+xgboost
+lightgbm
+catboost
+optuna
+
+# Deep Learning
+torch
+pytorch-tabnet
+
+# Data Collection
+requests
+beautifulsoup4
+selenium
+aiohttp
+
+# MLOps & Monitoring
+mlflow
+evidently
+great-expectations
+
+# API & Deployment
+fastapi
+uvicorn
+pydantic
+redis
+
+# Utilities
+python-dotenv
+pyyaml
+loguru
+typer
+rich
+tqdm
+
+# Testing
+pytest
+pytest-asyncio
+pytest-cov
+
+# Data Visualization
+plotly
+matplotlib
+seaborn
+
+# Geospatial
+geopandas
+folium
+
+# Time Series
+prophet
+statsmodels

@@ -1,0 +1,33 @@
+# Production requirements for Render deployment
+# Core API & Web Framework
+fastapi
+uvicorn[standard]
+pydantic
+
+# Machine Learning Core
+numpy
+pandas
+scikit-learn
+
+# Models
+tensorflow
+xgboost
+lightgbm
+catboost
+
+# Data Processing
+joblib
+
+# HTTP & Requests
+requests
+aiohttp
+
+# Environment & Config
+python-dotenv
+pyyaml
+
+# Monitoring & Logging
+loguru
+
+# Utilities
+tqdm
