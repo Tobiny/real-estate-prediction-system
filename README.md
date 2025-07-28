@@ -2,13 +2,15 @@
 
 > **Professional-grade machine learning system for real estate price prediction using neural networks and 3.9M transaction dataset**
 
-[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Visit%20API-blue?style=for-the-badge)](https://YOUR_RENDER_URL.onrender.com)
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Visit%20API-blue?style=for-the-badge)](https://real-estate-prediction-system.onrender.com/)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776ab?style=for-the-badge&logo=python)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow)](https://tensorflow.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://tensorflow.org)
+[![License](https://img.shields.io/github/license/tobiny/real-estate-prediction-system?style=for-the-badge)](LICENSE)
 
 ## 🎯 Overview
+
+
 
 A production-ready machine learning system that predicts real estate price returns with **61% accuracy (R²)** for 1-month forecasts and **19% accuracy** for 3-month forecasts. Built with advanced neural networks and trained on 3.9 million real estate transactions from Zillow Research data.
 
@@ -367,22 +369,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **TensorFlow team** for neural network framework
 - **FastAPI community** for excellent web framework
 - **Render** for seamless deployment platform
-
-## 📈 Future Enhancements
-
-### 🔮 Planned Features
-- [ ] **Real-time data integration** with live market feeds
-- [ ] **Additional geographic markets** (international expansion)
-- [ ] **Mobile app** with native iOS/Android support
-- [ ] **Advanced visualizations** with interactive charts
-- [ ] **Webhook notifications** for prediction alerts
-- [ ] **Batch processing API** for institutional clients
-
-### 🧠 Model Improvements
-- [ ] **Transformer architectures** for sequence modeling
-- [ ] **Multi-modal learning** with satellite imagery
-- [ ] **Ensemble optimization** with meta-learning
-- [ ] **Causal inference** for intervention analysis
 
 ---
 
