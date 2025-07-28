@@ -33,8 +33,7 @@ data/processed/
 *.parquet
 *.xlsx
 
-# Model files (too large for git)
-models/*.pkl
+# Model files
 models/*.h5
 models/*.joblib
 
