@@ -21,6 +21,7 @@ joblib
 # HTTP & Requests
 requests
 aiohttp
+slowapi
 
 # Environment & Config
 python-dotenv
