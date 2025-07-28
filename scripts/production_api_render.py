@@ -185,18 +185,13 @@ class ProductionModelManager:
             # Initialize features with realistic defaults based on training data ranges
             features = {}
             
-            # Core value feature
-            features['Value'] = property_data.current_value
-            
-            # Geographic features (use consistent encoding)
-            zip_code_encoded = int(property_data.zip_code) % 1000  # More reasonable range
-            state_encoded = hash(property_data.state) % 50
-            features['RegionName_encoded'] = zip_code_encoded
-            features['StateName_encoded'] = state_encoded
-            
-            # Property type encoding
-            prop_type_map = {'SingleFamily': 0, 'Condo': 1, 'Townhouse': 2, 'MultiFamily': 3}
-            features['RegionType_encoded'] = prop_type_map.get(property_data.property_type, 0)
+            # Core features matching training exactly
+            features['SizeRank'] = int(property_data.zip_code) % 1000  # Proxy for size rank
+            features['RegionType'] = {'SingleFamily': 0, 'Condo': 1, 'Townhouse': 2, 'MultiFamily': 3}.get(property_data.property_type, 0)
+            features['StateName'] = hash(property_data.state) % 50  # Encoded state
+            features['State'] = hash(property_data.state) % 50  # Same as StateName for consistency
+            features['Metro'] = hash(property_data.zip_code[:3]) % 100  # Metro area proxy
+            features['CountyName'] = hash(property_data.zip_code[:2]) % 200  # County proxy
             
             # Temporal features (matching training)
             features['Year'] = now.year
@@ -215,22 +210,24 @@ class ProductionModelManager:
             features['MonthsSinceStart'] = (now.year - 2000) * 12 + now.month
             features['MonthsSinceLatest'] = 0
             
-            # Market era classification
+            # Market era classification (exact name from training)
             if now.year >= 2022:
-                features['MarketEra_encoded'] = 4  # post_covid
+                features['MarketEra'] = 4  # post_covid
             elif now.year >= 2020:
-                features['MarketEra_encoded'] = 3  # covid_boom
+                features['MarketEra'] = 3  # covid_boom
             else:
-                features['MarketEra_encoded'] = 2  # post_crisis
+                features['MarketEra'] = 2  # post_crisis
             
-            # Price and rent features
+            # Rent and ratio features (exact names from training)
             if property_data.recent_rent and property_data.recent_rent > 0:
+                features['Rent'] = property_data.recent_rent
                 features['PriceToRentRatio'] = property_data.current_value / (property_data.recent_rent * 12)
                 features['RentAffordabilityRatio'] = (property_data.recent_rent * 12) / 70000
                 features['PriceRentSpread'] = property_data.current_value - (property_data.recent_rent * 12 * 20)
             else:
                 # Use market-typical values
                 typical_rent = property_data.current_value / 12 / 25  # 25x rent rule
+                features['Rent'] = typical_rent
                 features['PriceToRentRatio'] = 25.0
                 features['RentAffordabilityRatio'] = (typical_rent * 12) / 70000
                 features['PriceRentSpread'] = 0
@@ -251,9 +248,9 @@ class ProductionModelManager:
             features['State_std'] = property_data.current_value * 0.3
             features['State_count'] = 1000  # default state property count
             
-            # Geographic clustering
-            features['GeographicCluster'] = zip_code_encoded % 10
-            features['StateRank'] = state_encoded % 20
+            # Geographic clustering (exact names from training)
+            features['GeographicCluster'] = int(property_data.zip_code) % 10
+            features['StateRank'] = hash(property_data.state) % 20
             features['ValueRankInState'] = 0.5  # median position
             
             # Lag features (use current value as proxy for historical)
@@ -297,63 +294,78 @@ class ProductionModelManager:
             features['MonthsOfSupply'] = 5.0  # typical market
             features['MarketLiquidity'] = 0.2
             
-            # Create feature vector matching training pipeline
+            # Create feature vector with exact training feature names
             if self.feature_names and len(self.feature_names) > 0:
                 feature_vector = np.zeros(len(self.feature_names))
+                mapped_features = 0
                 
-                # Map features by name
+                # Map features by exact name
                 for i, feature_name in enumerate(self.feature_names):
                     if feature_name in features:
                         feature_vector[i] = features[feature_name]
+                        mapped_features += 1
                     else:
-                        # Use realistic defaults instead of random noise
-                        if 'Value' in feature_name:
-                            feature_vector[i] = property_data.current_value * np.random.uniform(0.95, 1.05)
-                        elif 'ratio' in feature_name.lower() or 'Ratio' in feature_name:
-                            feature_vector[i] = np.random.uniform(0.1, 2.0)
-                        elif 'pct_change' in feature_name or 'trend' in feature_name:
-                            feature_vector[i] = np.random.uniform(-0.02, 0.05)  # realistic price changes
-                        elif 'encoded' in feature_name:
-                            feature_vector[i] = np.random.randint(0, 100)
+                        # Handle missing features with realistic defaults based on feature name patterns
+                        if feature_name.startswith('target_'):
+                            feature_vector[i] = 0  # Target features shouldn't be used in prediction
+                        elif 'Value_lag_' in feature_name:
+                            # Historical values - slight discount from current
+                            lag_months = int(feature_name.split('_')[-1]) if feature_name.split('_')[-1].isdigit() else 1
+                            feature_vector[i] = property_data.current_value * (1 - lag_months * 0.005)
+                        elif 'Value_rolling_mean_' in feature_name:
+                            feature_vector[i] = property_data.current_value
+                        elif 'Value_rolling_std_' in feature_name:
+                            feature_vector[i] = property_data.current_value * 0.1
+                        elif 'Value_rolling_min_' in feature_name:
+                            feature_vector[i] = property_data.current_value * 0.9
+                        elif 'Value_rolling_max_' in feature_name:
+                            feature_vector[i] = property_data.current_value * 1.1
+                        elif 'Value_pct_change_' in feature_name:
+                            # Simulate historical price changes
+                            months = int(feature_name.split('_')[-1]) if feature_name.split('_')[-1].isdigit() else 3
+                            feature_vector[i] = (0.05 / 12) * months  # 5% annual growth
+                        elif 'Value_diff_' in feature_name:
+                            months = int(feature_name.split('_')[-1]) if feature_name.split('_')[-1].isdigit() else 3
+                            feature_vector[i] = property_data.current_value * (0.05 / 12) * months
+                        elif 'Value_trend_' in feature_name:
+                            feature_vector[i] = property_data.current_value * 0.001
+                        elif 'Value_momentum_' in feature_name:
+                            feature_vector[i] = 1.02  # slight positive momentum
+                        elif 'Value_volatility_' in feature_name:
+                            feature_vector[i] = 0.05
+                        elif feature_name in ['Metro_mean', 'Metro_median', 'Metro_std', 'Metro_count']:
+                            # Metro-level features
+                            if 'mean' in feature_name or 'median' in feature_name:
+                                feature_vector[i] = property_data.current_value
+                            elif 'std' in feature_name:
+                                feature_vector[i] = property_data.current_value * 0.2
+                            elif 'count' in feature_name:
+                                feature_vector[i] = 500
                         else:
-                            feature_vector[i] = 0  # neutral default
+                            # Other missing features get neutral values
+                            feature_vector[i] = 0
+                
+                self.logger.info(f"   Mapped {mapped_features}/{len(self.feature_names)} features by name")
+                
             else:
-                # Fallback: create ordered feature vector
-                feature_list = []
-                
-                # Add core features in expected order
-                ordered_features = [
-                    'Value', 'Year', 'Month', 'Quarter', 'Month_sin', 'Month_cos',
-                    'Quarter_sin', 'Quarter_cos', 'MonthsSinceStart', 'PriceToRentRatio',
-                    'ValueVsNational', 'ValueVsNationalMedian'
-                ]
-                
-                for feat_name in ordered_features:
-                    feature_list.append(features.get(feat_name, 0))
-                
-                # Pad to 82 features with realistic values
-                while len(feature_list) < 82:
-                    if len(feature_list) % 3 == 0:
-                        feature_list.append(property_data.current_value * np.random.uniform(0.9, 1.1))
-                    elif len(feature_list) % 3 == 1:
-                        feature_list.append(np.random.uniform(-0.05, 0.05))  # price change
-                    else:
-                        feature_list.append(np.random.uniform(0, 1))  # ratio/normalized
-                
-                feature_vector = np.array(feature_list[:82])
+                # Fallback if no feature names available (shouldn't happen in production)
+                feature_vector = np.array([property_data.current_value] + [0] * 81)
+                self.logger.warning("No feature names available, using fallback feature vector")
             
             self.logger.info(f"✅ Features engineered: {len(feature_vector)} features")
-            self.logger.info(f"   Value={features.get('Value', 0):.0f}, P/R Ratio={features.get('PriceToRentRatio', 0):.1f}, ValueVsNational={features.get('ValueVsNational', 0):.2f}")
-            self.logger.info(f"   Market Era={features.get('MarketEra_encoded', 0)}, State={property_data.state}, Type={property_data.property_type}")
+            self.logger.info(f"   P/R Ratio={features.get('PriceToRentRatio', 0):.1f}, ValueVsNational={features.get('ValueVsNational', 0):.2f}")
+            self.logger.info(f"   Market Era={features.get('MarketEra', 0)}, State={property_data.state}, Type={property_data.property_type}")
             
             # Log feature statistics for debugging
             feature_stats = {
                 'min': np.min(feature_vector),
                 'max': np.max(feature_vector), 
                 'mean': np.mean(feature_vector),
-                'std': np.std(feature_vector)
+                'std': np.std(feature_vector),
+                'non_zero_count': np.count_nonzero(feature_vector)
             }
             self.logger.info(f"   Feature stats: min={feature_stats['min']:.2f}, max={feature_stats['max']:.0f}, mean={feature_stats['mean']:.0f}, std={feature_stats['std']:.0f}")
+            self.logger.info(f"   Non-zero features: {feature_stats['non_zero_count']}/{len(feature_vector)}")
             
             return feature_vector.reshape(1, -1)
 
